@@ -10,6 +10,7 @@ import { LABEL, Galat, boleh, namaPeriode } from './config.js';
 import { bootstrap } from './bootstrap.js';
 import { AKSI } from './aksi.js';
 import { bacaRekap, cocokkan } from './iuran.js';
+import { imporAnggota } from './anggota-impor.js';
 
 const RAHASIA = process.env.JWT_SECRET;
 const h = (fn) => (req, res, next) => fn(req, res).catch(next);
@@ -90,6 +91,21 @@ app.post('/api/iuran/impor', auth, unggah.single('file'), h(async (req, res) => 
     await c.log(`${ulang ? 'Mengimpor ulang' : 'Mengimpor'} rekap iuran ${namaPeriode(tahun, bulan)} (${rows.length} baris)`);
   });
   res.json({ ok: true, periode: m[0] });
+}));
+
+// Impor data anggota dari Excel (multipart: file, simpan=1). Tanpa simpan=1 hanya memeriksa dan mengembalikan pratinjau.
+app.post('/api/anggota/impor', auth, unggah.single('file'), h(async (req, res) => {
+  if (req.u.wajib_ganti) throw new Galat('Ganti sandi awal Anda terlebih dahulu.', 403);
+  const simpan = req.body.simpan === '1';
+  const hasil = await tx(async (db) => {
+    const c = konteks(db, req.u);
+    c.izin('anggotaUbah');
+    if (simpan) await db.query('SELECT pg_advisory_xact_lock(7302)');
+    const r = await imporAnggota(db, req.file, simpan);
+    if (simpan && (r.jumlahBaru || r.jumlahDiperbarui)) await c.log(`Mengimpor data anggota dari ${String(req.file.originalname).slice(0, 120)}: ${r.jumlahBaru} baru, ${r.jumlahDiperbarui} diperbarui`);
+    return r;
+  });
+  res.json({ ...hasil, disimpan: simpan });
 }));
 
 app.use((req, res) => res.status(404).json({ pesan: 'Alamat tidak ditemukan.' }));

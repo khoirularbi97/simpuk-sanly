@@ -182,12 +182,77 @@ function vDashboard() {
 
 // ---------- Anggota ----------
 function opt(v, t, sel) { return '<option value="' + esc(v) + '"' + (v === sel ? ' selected' : '') + '>' + esc(t) + '</option>'; }
+// ---------- Impor data anggota dari Excel ----------
+var KOLOM_TEMPLAT = ['NIK', 'Nama', 'Departemen', 'Plant', 'Status karyawan', 'Kontrak ke', 'Akhir kontrak', 'Mulai bekerja', 'Tanggal gabung', 'No HP', 'Garda Metal', 'Keanggotaan'];
+function vImporAnggota() {
+  var h = state.impangHasil;
+  var form = '<form id="frmimpang" class="glass pad stack" novalidate><div class="head"><h2>Impor data anggota dari Excel</h2><button type="button" class="btn" data-act="impang-templat">Unduh templat</button></div>' +
+    '<p class="small muted">File .xlsx atau .csv dengan baris judul. Wajib ada kolom <b>NIK</b> dan <b>Nama</b>. Untuk anggota baru juga wajib: Departemen, Plant, Status karyawan (PKWT/PKWTT), Kontrak ke (khusus PKWT), dan Mulai bekerja. ' +
+    'Kolom lain boleh ada: Akhir kontrak, Tanggal gabung, No HP, Garda Metal, Keanggotaan. Tanggal ditulis seperti 31/12/2026.</p>' +
+    '<p class="small muted">NIK yang sudah terdaftar akan diperbarui sesuai isi file; sel yang kosong tidak mengubah data lama. Peran, sandi, nomor KTA, dan korlap tidak ikut berubah. Anggota baru masuk dengan sandi awal dan wajib menggantinya.</p>' +
+    '<div id="impang-err" class="err" role="alert" hidden></div>' +
+    '<div class="row" style="align-items:flex-end">' + fld('ia-file', 'File data anggota', '<input id="ia-file" type="file" accept=".xlsx,.csv" style="padding:9px 12px">', true) + '</div>' +
+    (state.impangFile ? '<p class="small">File dipilih: <span class="nm">' + esc(state.impangFile.name) + '</span></p>' : '') +
+    '<div class="row"><button type="submit" class="btn primary" id="ia-periksa">Periksa file</button><button type="button" class="btn" data-act="impang-tutup">Tutup</button></div></form>';
+  if (!h) return form;
+  function tabel(judul, kepala, baris) {
+    return '<section class="glass"><div class="pad"><h2>' + judul + '</h2></div><div class="tablewrap"><table><thead><tr>' + kepala.map(function (k) { return '<th>' + k + '</th>'; }).join('') + '</tr></thead><tbody>' + baris.join('') + '</tbody></table></div></section>';
+  }
+  function lebih(n, tampil) { return n > tampil ? '<p class="small muted" style="padding:0 4px">Menampilkan ' + tampil + ' dari ' + n + ' baris.</p>' : ''; }
+  var siap = h.jumlahBaru + h.jumlahDiperbarui;
+  return form +
+    '<section class="kpis" aria-label="Hasil pemeriksaan" style="--kpi-h:0">' +
+      '<div class="glass kpi"><div class="small muted">Anggota baru</div><div class="v num">' + h.jumlahBaru + '</div></div>' +
+      '<div class="glass kpi"><div class="small muted">Diperbarui</div><div class="v num">' + h.jumlahDiperbarui + '</div></div>' +
+      '<div class="glass kpi"><div class="small muted">Tanpa perubahan</div><div class="v num">' + h.tetap + '</div></div>' +
+      '<div class="glass kpi' + (h.jumlahGalat ? ' hot' : '') + '"><div class="small muted">Dilewati karena salah</div><div class="v num">' + h.jumlahGalat + '</div></div>' +
+    '</section>' +
+    '<p class="small" style="padding:0 4px">Kolom yang terbaca: ' + esc(h.kolom.join(', ')) + '.</p>' +
+    (h.galat.length ? tabel('Baris yang dilewati', ['Baris', 'NIK', 'Nama', 'Alasan'], h.galat.map(function (g) { return '<tr><td class="num">' + g.baris + '</td><td class="num">' + esc(g.nik || '-') + '</td><td>' + esc(g.nama || '-') + '</td><td>' + esc(g.pesan) + '</td></tr>'; })) + lebih(h.jumlahGalat, h.galat.length) : '') +
+    (h.baru.length ? tabel('Anggota baru', ['NIK', 'Nama', 'Departemen', 'Plant', 'Status karyawan'], h.baru.map(function (a) { return '<tr><td class="num">' + esc(a.nik) + '</td><td><span class="nm">' + esc(a.nama) + '</span></td><td>' + esc(a.dept) + '</td><td>' + esc(a.plant) + '</td><td>' + (a.kar === 'pkwtt' ? pill('info', 'PKWTT') : pill('vio', 'PKWT · Kontrak ' + a.ke)) + '</td></tr>'; })) + lebih(h.jumlahBaru, h.baru.length) : '') +
+    (h.diperbarui.length ? tabel('Anggota yang diperbarui', ['NIK', 'Nama', 'Kolom yang berubah'], h.diperbarui.map(function (a) { return '<tr><td class="num">' + esc(a.nik) + '</td><td><span class="nm">' + esc(a.nama) + '</span></td><td>' + esc(a.kolom.join(', ')) + '</td></tr>'; })) + lebih(h.jumlahDiperbarui, h.diperbarui.length) : '') +
+    '<section class="glass pad head"><div style="flex:1 1 300px"><div class="nm">' + (siap ? 'Simpan ' + siap + ' perubahan?' : 'Tidak ada yang perlu disimpan') + '</div><p class="small muted">' +
+      (siap ? h.jumlahBaru + ' anggota baru dan ' + h.jumlahDiperbarui + ' pembaruan.' + (h.jumlahGalat ? ' Baris yang salah tidak ikut disimpan; perbaiki di Excel lalu impor lagi.' : '') : 'Semua NIK di file sudah sesuai dengan data, atau semua barisnya salah.') + '</p></div>' +
+      '<button type="button" class="btn primary" data-act="impang-simpan"' + (siap ? '' : ' disabled') + '>Simpan ke data anggota</button></section>';
+}
+async function periksaImporAnggota(simpan) {
+  var input = document.getElementById('ia-file');
+  if (input && input.files[0]) state.impangFile = input.files[0];
+  if (!state.impangFile) { galat('impang-err', 'Pilih file data anggota terlebih dahulu.'); return; }
+  var tombol = document.querySelector(simpan ? '[data-act=impang-simpan]' : '#ia-periksa');
+  if (tombol) { tombol.disabled = true; tombol.textContent = simpan ? 'Menyimpan…' : 'Memeriksa…'; }
+  var fd = new FormData(); fd.append('file', state.impangFile); if (simpan) fd.append('simpan', '1');
+  var h;
+  try { h = await api('POST', '/api/anggota/impor', fd); }
+  catch (e) {
+    if (tombol) { tombol.disabled = false; tombol.textContent = simpan ? 'Simpan ke data anggota' : 'Periksa file'; }
+    if (e.status === 401) { setToken(''); state.user = null; render(); toast(e.message); return; }
+    galat('impang-err', e.message); return;
+  }
+  if (!simpan) { state.impangHasil = h; render(); return; }
+  state.impang = false; state.impangHasil = null; state.impangFile = null; state.pages = {};
+  await muat();
+  toast(h.jumlahBaru + ' anggota ditambahkan, ' + h.jumlahDiperbarui + ' diperbarui');
+}
+function unduhTemplat() {
+  var baris = [KOLOM_TEMPLAT,
+    ['CONTOH', 'Contoh Anggota Kontrak (hapus baris ini)', 'Injection', 'Plant 1', 'PKWT', '1', '31/12/2026', '06/01/2025', '01/04/2025', '081200000000', 'Tidak', 'Aktif'],
+    ['CONTOH', 'Contoh Anggota Tetap (hapus baris ini)', 'Painting', 'Plant 2', 'PKWTT', '', '', '18/04/2016', '01/08/2016', '', 'Ya', 'Aktif']];
+  var csv = 'sep=;\r\n' + baris.map(function (b) { return b.join(';'); }).join('\r\n') + '\r\n';
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'templat-data-anggota-simpuk.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
 function vAnggota() {
   var f = state.filter;
   var korlaps = state.anggota.filter(function (a) { return state.anggota.some(function (b) { return b.korlap === a.nik; }); });
   return '' +
     '<div class="head"><div><h1>Data Anggota</h1><p class="muted" id="ringkas"></p></div>' +
-      (izin('anggotaUbah') ? '<button type="button" class="btn primary" data-act="tambah">Tambah anggota</button>' : '') + '</div>' +
+      (izin('anggotaUbah') ? '<div class="row"><button type="button" class="btn" data-act="impang-buka">Impor dari Excel</button><button type="button" class="btn primary" data-act="tambah">Tambah anggota</button></div>' : '') + '</div>' +
+    (izin('anggotaUbah') && state.impang ? vImporAnggota() : '') +
     '<div id="formslot">' + (state.form ? vForm() : '') + '</div>' +
     '<section class="glass pad row" aria-label="Filter" style="align-items:flex-end">' +
       '<div class="field grow"><label for="f-q">Cari</label><input id="f-q" type="search" placeholder="Nama atau NIK" value="' + esc(f.q) + '"></div>' +
@@ -1007,7 +1072,7 @@ function render() {
   if (r === 'kta') gambarKta();
   tabelPintar();
 }
-window.addEventListener('hashchange', function () { state.form = null; state.kasForm = false; state.umumForm = false; state.suratForm = false; state.bidangForm = ''; state.hapusUmum = null; state.confirmLock = false; render(); });
+window.addEventListener('hashchange', function () { state.impang = false; state.impangHasil = null; state.impangFile = null; state.form = null; state.kasForm = false; state.umumForm = false; state.suratForm = false; state.bidangForm = ''; state.hapusUmum = null; state.confirmLock = false; render(); });
 
 document.addEventListener('click', function (ev) {
   var b = ev.target.closest('[data-act]'); if (!b || b.disabled) return;
@@ -1029,6 +1094,10 @@ document.addEventListener('click', function (ev) {
   else if (act === 'keluar') keluar();
   else if (act === 'kas-tambah') { state.kasForm = true; render(); document.getElementById('k-ket').focus(); }
   else if (act === 'kas-batal') { state.kasForm = false; render(); }
+  else if (act === 'impang-buka') { state.impang = true; state.impangHasil = null; state.impangFile = null; state.form = null; render(); }
+  else if (act === 'impang-tutup') { state.impang = false; state.impangHasil = null; state.impangFile = null; render(); }
+  else if (act === 'impang-templat') unduhTemplat();
+  else if (act === 'impang-simpan') periksaImporAnggota(true);
   else if (act === 'tambah') { state.form = { nik: null, data: { nik: '', nama: '', dept: '', plant: '', hp: '', korlap: '', kar: 'pkwt', kontrakKe: 1, akhir: '', mulai: iso(today), gabung: iso(today), status: 'aktif' } }; render(); document.getElementById('a-nik').focus(); }
   else if (act === 'ubah') { var a = byNik(b.dataset.nik); state.form = { nik: a.nik, data: Object.assign({}, a) }; render(); document.getElementById('a-nama').focus(); document.getElementById('frm').scrollIntoView({ block: 'start' }); }
   else if (act === 'batal') { state.form = null; render(); }
@@ -1038,7 +1107,7 @@ document.addEventListener('click', function (ev) {
   else if (act === 'kunci-ya') aksi('iuran-kunci', { periode: state.periode.id }, 'Periode dikunci', null, function () { state.confirmLock = false; });
 });
 document.addEventListener('submit', function (ev) {
-  var F = { frm: simpan, login: cobaMasuk, frmimpor: simpanImpor, frmkas: simpanKas, frmumum: simpanUmum, frmadu: simpanAduan, frmsandi: gantiSandi, frmsurat: simpanSurat, frmdiklat: simpanDiklat, frmpkb: simpanPkb, frmsos: simpanSos, frmdon: simpanDon, frmkamp: simpanKamp, frmsm: simpanSm, frmins: simpanIns, frmasp: simpanAsp, frmtugas: simpanTugas };
+  var F = { frm: simpan, login: cobaMasuk, frmimpor: simpanImpor, frmimpang: function () { periksaImporAnggota(false); }, frmkas: simpanKas, frmumum: simpanUmum, frmadu: simpanAduan, frmsandi: gantiSandi, frmsurat: simpanSurat, frmdiklat: simpanDiklat, frmpkb: simpanPkb, frmsos: simpanSos, frmdon: simpanDon, frmkamp: simpanKamp, frmsm: simpanSm, frmins: simpanIns, frmasp: simpanAsp, frmtugas: simpanTugas };
   var fn = F[ev.target.id]; if (fn) { ev.preventDefault(); fn(); }
 });
 document.addEventListener('input', function (ev) {
@@ -1051,6 +1120,7 @@ document.addEventListener('change', function (ev) {
   else if (t.dataset && t.dataset.ps) { state.pageSize = Number(t.value); state.pages = {}; tabelPintar(); }
   else if (t.dataset && t.dataset.cat) aksi('iuran-catatan', { id: Number(t.dataset.cat), catatan: t.value.trim() }, 'Catatan disimpan');
   else if (map[t.id]) { state.filter[map[t.id]] = t.value; state.pages = {}; tabelAnggota(); }
+  else if (t.id === 'ia-file') { state.impangFile = t.files[0] || null; state.impangHasil = null; }
   else if (t.id === 'a-kar') { var on = t.value === 'pkwt'; document.getElementById('w-ke').hidden = !on; document.getElementById('w-akhir').hidden = !on; }
   else if (t.id === 'f-jenis') { state.jenis = t.value; render(); }
   else if (t.id === 'f-periode') { state.periodeKey = t.value; state.jenis = ''; state.confirmLock = false; muat(); }

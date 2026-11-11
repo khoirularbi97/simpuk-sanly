@@ -13,6 +13,7 @@ Sistem Informasi dan Manajemen Anggota PUK SPAMK FSPMI PT. Sanly Industries.
 - **Login** dengan NIK dan sandi. Akun baru wajib mengganti sandi awal sebelum bisa membuka menu lain.
 - **Peran:** Sekretaris (Admin), Ketua, Bendahara, Waka Hukum & Advokasi, Waka Organisasi & Infokom, Waka Pendidikan, Waka Pengupahan & PKB, Waka Kesejahteraan Sosial, dan Anggota. Hak akses diperiksa di server, bukan hanya disembunyikan di tampilan.
 - **Data anggota:** status PKWT/PKWTT, kontrak ke berapa, akhir kontrak, nomor KTA otomatis, dan KTA digital dengan kode QR.
+- **Impor anggota dari Excel** (.xlsx atau .csv): pratinjau dulu (anggota baru, yang diperbarui beserta kolomnya, dan baris yang salah beserta alasannya), baru disimpan. NIK yang sudah ada diperbarui; sel kosong tidak mengubah data lama; peran, sandi, nomor KTA, dan korlap tidak berubah. Templat bisa diunduh dari halaman Data Anggota.
 - **Iuran potong gaji:** impor rekap HR (.xlsx atau .csv), pencocokan otomatis (tidak terpotong, nominal nol atau berubah lebih dari 50%, bukan anggota, anggota tidak aktif), catatan per baris, lalu kunci periode. Total iuran otomatis masuk kas. Data gaji tidak pernah disimpan.
 - **Kas:** pengeluaran mulai Rp 500.000 menunggu validasi Ketua sebelum mengurangi saldo.
 - **Advokasi:** anggota mengadu, Bidang Hukum memverifikasi dan menulis strategi, surat tugas bernomor otomatis dibuat, Ketua menyetujui atau meminta revisi.
@@ -59,7 +60,7 @@ Tabel tidak perlu dibuat manual. Server menjalankan `server/db/schema.sql` sendi
 
 1. Buka alamat Vercel, masuk dengan `ADMIN_NIK` dan `SANDI_AWAL`.
 2. Ganti sandi awal.
-3. Tambahkan anggota di **Data Anggota**, lalu atur peran pengurus di **Pengguna**. Semua anggota baru masuk dengan `SANDI_AWAL` dan wajib menggantinya.
+3. Tambahkan anggota di **Data Anggota**, satu per satu atau sekaligus lewat **Impor dari Excel**, lalu atur peran pengurus di **Pengguna**. Semua anggota baru masuk dengan `SANDI_AWAL` dan wajib menggantinya.
 
 ## Menjalankan di komputer sendiri
 
@@ -87,6 +88,7 @@ npm run dev                 # http://localhost:5173
 ## Catatan
 
 - **Render gratis tidur** setelah 15 menit tanpa akses. Akses pertama sesudahnya bisa butuh sekitar satu menit; halaman login menampilkan pesan selama menunggu.
+- **Format data anggota:** judul kolom yang dikenali antara lain NIK, Nama, Departemen/Dept/Bagian, Plant, Status karyawan (PKWT, PKWTT, Kontrak, Tetap), Kontrak ke, Akhir kontrak, Mulai bekerja/Tgl masuk, Tanggal gabung, No HP, Garda Metal (Ya/Tidak), dan Keanggotaan (Aktif/Nonaktif/Keluar). Tanggal boleh berupa sel tanggal Excel atau teks seperti 31/12/2026 dan 30 Juni 2027. Bila Tanggal gabung kosong, dipakai tanggal mulai bekerja. Format kolom NIK sebagai teks di Excel bila ada NIK yang diawali angka 0.
 - **Format rekap HR:** kolom dikenali dari judulnya, yaitu `NIK`, `Nama`, dan `Nominal`/`Potongan`/`Iuran`/`Jumlah`. Baris judul boleh di bawah baris lain, dan baris tanpa NIK valid (misalnya baris total) dilewati.
 - **Batas validasi kas** bisa diubah lewat variabel `BATAS_VALIDASI` di Render (bawaan 500000).
 - **Cadangan data:** Neon gratis menyimpan riwayat 24 jam. Untuk data organisasi, sebaiknya ekspor rutin dengan `pg_dump`.

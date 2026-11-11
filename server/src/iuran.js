@@ -27,20 +27,23 @@ function bacaCsv(teks) {
   });
 }
 
+// Membaca sheet pertama file .xlsx atau .csv menjadi tabel baris dan kolom.
+export async function bacaTabel(file, pesanKosong = 'Pilih file terlebih dahulu.') {
+  if (!file) throw new Galat(pesanKosong);
+  const nama = file.originalname.toLowerCase();
+  try {
+    if (nama.endsWith('.csv')) return bacaCsv(file.buffer.toString('utf8')).filter((b) => !/^sep=/i.test(b[0] || ''));
+    if (nama.endsWith('.xlsx')) return ((await readXlsxFile(file.buffer))[0] || { data: [] }).data;   // sheet pertama
+  } catch {
+    throw new Galat('File tidak bisa dibaca. Pastikan berupa Excel (.xlsx) atau CSV yang tidak rusak.');
+  }
+  throw new Galat('Format file harus .xlsx atau .csv.');
+}
+
 // Membaca rekap potongan dari HR (.xlsx atau .csv) menjadi [{ nik, nama, nominal, ket }].
 // Kolom dikenali dari judulnya: NIK, Nama, dan Nominal/Potongan/Iuran/Jumlah. Tanpa judul: kolom 1, 2, 3.
 export async function bacaRekap(file) {
-  if (!file) throw new Galat('Pilih file rekap terlebih dahulu.');
-  const nama = file.originalname.toLowerCase();
-  let tabel;
-  try {
-    if (nama.endsWith('.csv')) tabel = bacaCsv(file.buffer.toString('utf8'));
-    else if (nama.endsWith('.xlsx')) tabel = ((await readXlsxFile(file.buffer))[0] || { data: [] }).data;   // sheet pertama
-    else throw new Galat('Format file harus .xlsx atau .csv.');
-  } catch (e) {
-    if (e instanceof Galat) throw e;
-    throw new Galat('File tidak bisa dibaca. Pastikan berupa Excel (.xlsx) atau CSV yang tidak rusak.');
-  }
+  const tabel = await bacaTabel(file, 'Pilih file rekap terlebih dahulu.');
   let kNik = 0, kNama = 1, kNom = 2, mulai = 0;
   for (let i = 0; i < Math.min(tabel.length, 15); i++) {
     const j = tabel[i].map((c) => String(c ?? '').toLowerCase());

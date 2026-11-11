@@ -302,3 +302,4 @@ td.r, th.r { text-align: right; }
   body { background: #FFFFFF; padding: 0; }
   main { background: none; border: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
+[aria-label="Hasil pemeriksaan"] .kpi { min-height: 0; }
