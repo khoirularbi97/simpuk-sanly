@@ -1,0 +1,26 @@
+# Blueprint Render untuk backend SIMPUK (Dashboard Render > New > Blueprint > pilih repo ini).
+services:
+  - type: web
+    name: simpuk-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false          # tempel connection string dari Neon
+      - key: FRONTEND_URL
+        sync: false          # alamat Vercel, mis. https://simpuk-sanly.vercel.app
+      - key: SANDI_AWAL
+        sync: false          # sandi awal akun baru, minimal 8 karakter
+      - key: ADMIN_NIK
+        sync: false          # NIK Sekretaris (akun admin pertama)
+      - key: ADMIN_NAMA
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true  # dibuat acak otomatis oleh Render

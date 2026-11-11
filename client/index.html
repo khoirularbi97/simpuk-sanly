@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SIMPUK</title>
+  <meta name="description" content="Sistem informasi dan manajemen anggota PUK SPAMK FSPMI PT. Sanly Industries">
+  <link rel="icon" type="image/png" href="/logo-mark.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
+</head>
+<body>
+<div class="photo" aria-hidden="true"></div>
+<div class="app">
+  <aside class="side">
+    <div class="brandrow"><img class="logo" src="/logo-mark.png" alt=""><div><div class="brand">SIMPUK</div><div class="brand-sub">SPAMK FSPMI</div></div></div>
+    <button type="button" class="fold" id="fold" data-act="lipat" aria-label="Lipat menu" aria-expanded="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
+    <nav class="nav" id="nav" aria-label="Menu utama"></nav>
+    <div class="role" id="userbox"></div>
+  </aside>
+  <main id="view" tabindex="-1"></main>
+</div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>
