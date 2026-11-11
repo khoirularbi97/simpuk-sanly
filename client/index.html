@@ -6,6 +6,13 @@
   <title>SIMPUK</title>
   <meta name="description" content="Sistem informasi dan manajemen anggota PUK SPAMK FSPMI PT. Sanly Industries">
   <link rel="icon" type="image/png" href="/logo-mark.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#A8281E">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SIMPUK">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
 </head>
@@ -20,6 +27,7 @@
   </aside>
   <main id="view" tabindex="-1"></main>
 </div>
+<div id="offline" role="status" hidden>Anda sedang offline. Data terbaru akan dimuat lagi setelah tersambung.</div>
 <div id="toast" role="status" aria-live="polite" hidden></div>
   <script type="module" src="/src/app.js"></script>
 </body>

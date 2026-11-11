@@ -303,3 +303,9 @@ td.r, th.r { text-align: right; }
   main { background: none; border: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 [aria-label="Hasil pemeriksaan"] .kpi { min-height: 0; }
+#offline {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 30; text-align: center; font-weight: 600; font-size: 13px;
+  background: #1B1F27; color: #FFFFFF;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));
+}
+@media (display-mode: standalone) { body { padding-top: calc(16px + env(safe-area-inset-top, 0px)); } }

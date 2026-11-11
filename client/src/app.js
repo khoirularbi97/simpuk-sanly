@@ -72,10 +72,11 @@ function terima(d) {
 }
 async function muat() {
   if (!token) { state.user = null; state.memuat = false; render(); return; }
-  try { terima(await api('GET', '/api/bootstrap' + (state.periodeKey ? '?p=' + state.periodeKey : ''))); }
+  try { terima(await api('GET', '/api/bootstrap' + (state.periodeKey ? '?p=' + state.periodeKey : ''))); state.gagalMuat = false; }
   catch (e) {
-    if (e.status === 401) { setToken(''); state.user = null; }
-    toast(e.message);
+    if (e.status === 401) { setToken(''); state.user = null; state.gagalMuat = false; toast(e.message); }
+    else if (!state.user) state.gagalMuat = true;   // masih masuk, tapi server tidak terjangkau: jangan tampilkan form login
+    else toast(e.message);
   }
   state.memuat = false;
   render();
@@ -352,8 +353,36 @@ function vIuran() {
 }
 
 // ---------- Login ----------
+// ---------- PWA: pasang aplikasi dan status offline ----------
+var promptPasang = null;
+function terpasang() { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+function iOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function vPasang() {
+  if (terpasang()) return '';
+  if (promptPasang) return '<section class="glass pad head"><div style="flex:1 1 240px"><div class="nm">Pasang SIMPUK di perangkat ini</div><p class="small muted">Buka langsung dari layar utama, tanpa membuka browser.</p></div><button type="button" class="btn primary" data-act="pasang">Pasang aplikasi</button></section>';
+  if (iOS()) return '<section class="glass pad"><div class="nm">Pasang SIMPUK di iPhone atau iPad</div><p class="small muted">Buka halaman ini di Safari, tekan tombol Bagikan, lalu pilih Tambahkan ke Layar Utama.</p></section>';
+  return '';
+}
+async function pasang() {
+  if (!promptPasang) return;
+  promptPasang.prompt();
+  try { await promptPasang.userChoice; } catch (e) {}
+  promptPasang = null; render();
+}
+window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); promptPasang = e; render(); });
+window.addEventListener('appinstalled', function () { promptPasang = null; render(); toast('SIMPUK terpasang di perangkat ini'); });
+function cekOnline() { var el = document.getElementById('offline'); if (el) el.hidden = navigator.onLine; }
+window.addEventListener('online', function () { cekOnline(); if (token) muat(); });
+window.addEventListener('offline', cekOnline);
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+}
+
 function vLogin() {
   var logo = '<div class="logobox"><img src="/logo-full.png" alt="SIMPUK SPAMK FSPMI PT. Sanly Industries"></div>';
+  if (token && state.gagalMuat && !state.memuat) return logo + '<section class="glass pad stack" style="text-align:center"><h2>Tidak bisa terhubung ke server</h2>' +
+    '<p class="muted">' + (navigator.onLine ? 'Server mungkin sedang bangun atau ada gangguan. Coba lagi sebentar lagi.' : 'Perangkat sedang offline. Data akan dimuat otomatis setelah tersambung.') + '</p>' +
+    '<div class="row" style="justify-content:center"><button type="button" class="btn primary" data-act="coba-lagi">Coba lagi</button><button type="button" class="btn" data-act="keluar">Keluar</button></div></section>';
   if (state.memuat) return logo + '<section class="glass"><div class="empty">Memuat data. Bila server baru bangun, ini bisa sampai satu menit.</div></section>';
   return logo + '<div class="head"><div><h1>Masuk ke SIMPUK</h1><p class="muted">Gunakan NIK karyawan dan sandi Anda</p></div></div>' +
     '<form id="login" class="glass pad" novalidate style="display:flex;flex-direction:column;gap:14px">' +
@@ -362,7 +391,7 @@ function vLogin() {
       '<div class="field"><label for="l-sandi">Sandi</label><input id="l-sandi" type="password" autocomplete="current-password"></div>' +
       '<button type="submit" class="btn primary" id="l-kirim">Masuk</button>' +
     '</form>' +
-    '<p class="small muted" style="text-align:center">Belum punya akun atau lupa sandi? Hubungi Sekretaris PUK.</p>';
+    '<p class="small muted" style="text-align:center">Belum punya akun atau lupa sandi? Hubungi Sekretaris PUK.</p>' + vPasang();
 }
 
 // ---------- Akun dan ganti sandi ----------
@@ -373,7 +402,7 @@ function vAkun() {
     '<div class="field"><label for="p-lama">Sandi sekarang</label><input id="p-lama" type="password" autocomplete="current-password"></div>' +
     '<div class="field"><label for="p-baru">Sandi baru (minimal 8 karakter)</label><input id="p-baru" type="password" autocomplete="new-password"></div>' +
     '<div class="field"><label for="p-ulang">Ulangi sandi baru</label><input id="p-ulang" type="password" autocomplete="new-password"></div>' +
-    '<div><button type="submit" class="btn primary">Simpan sandi baru</button></div></form>';
+    '<div><button type="submit" class="btn primary">Simpan sandi baru</button></div></form>' + vPasang();
 }
 
 // ---------- Kas ----------
@@ -828,7 +857,7 @@ async function cobaMasuk() {
   if (location.hash.slice(1) !== awal) location.hash = awal;
   toast('Masuk sebagai ' + LABEL[state.role]);
 }
-function keluar() { setToken(''); terima({}); state.user = null; state.periodeKey = ''; render(); toast('Anda sudah keluar'); }
+function keluar() { state.gagalMuat = false; setToken(''); terima({}); state.user = null; state.periodeKey = ''; render(); toast('Anda sudah keluar'); }
 function gantiSandi() {
   var lama = document.getElementById('p-lama').value, baru = document.getElementById('p-baru').value, ulang = document.getElementById('p-ulang').value;
   var err = !lama ? 'Isi sandi sekarang.' : baru.length < 8 ? 'Sandi baru minimal 8 karakter.' : baru === lama ? 'Sandi baru harus berbeda dari sandi sekarang.' : baru !== ulang ? 'Ulangi sandi baru dengan tepat.' : '';
@@ -1094,6 +1123,8 @@ document.addEventListener('click', function (ev) {
   else if (act === 'keluar') keluar();
   else if (act === 'kas-tambah') { state.kasForm = true; render(); document.getElementById('k-ket').focus(); }
   else if (act === 'kas-batal') { state.kasForm = false; render(); }
+  else if (act === 'pasang') pasang();
+  else if (act === 'coba-lagi') { state.memuat = true; render(); muat(); }
   else if (act === 'impang-buka') { state.impang = true; state.impangHasil = null; state.impangFile = null; state.form = null; render(); }
   else if (act === 'impang-tutup') { state.impang = false; state.impangHasil = null; state.impangFile = null; render(); }
   else if (act === 'impang-templat') unduhTemplat();
@@ -1126,6 +1157,7 @@ document.addEventListener('change', function (ev) {
   else if (t.id === 'f-periode') { state.periodeKey = t.value; state.jenis = ''; state.confirmLock = false; muat(); }
 });
 
+cekOnline();
 state.memuat = !!token;
 render();
 muat();

@@ -21,6 +21,7 @@ Sistem Informasi dan Manajemen Anggota PUK SPAMK FSPMI PT. Sanly Industries.
 - **Korlap** (struktur, basis, instruksi, aspirasi) dan **Garda Metal** (penugasan dan kesiapan personel).
 - **Bidang:** pelatihan, usulan PKB, santunan (otomatis menjadi pengeluaran kas), dan donasi (masuk kas setelah diverifikasi bendahara).
 - **Pengumuman** dan **log aktivitas**.
+- **Bisa dipasang seperti aplikasi (PWA)** di Android, iPhone, dan laptop, dengan ikon di layar utama. Tampilan tersimpan di perangkat sehingga cepat terbuka dan tetap muncul saat sinyal hilang; data anggota tidak disimpan di perangkat.
 
 ## Deploy
 
@@ -61,6 +62,16 @@ Tabel tidak perlu dibuat manual. Server menjalankan `server/db/schema.sql` sendi
 1. Buka alamat Vercel, masuk dengan `ADMIN_NIK` dan `SANDI_AWAL`.
 2. Ganti sandi awal.
 3. Tambahkan anggota di **Data Anggota**, satu per satu atau sekaligus lewat **Impor dari Excel**, lalu atur peran pengurus di **Pengguna**. Semua anggota baru masuk dengan `SANDI_AWAL` dan wajib menggantinya.
+
+### 5. Memasang di HP (PWA)
+
+Fitur ini hanya aktif di alamat HTTPS, jadi berlaku setelah di-deploy ke Vercel.
+
+- **Android (Chrome):** buka alamat SIMPUK, lalu tekan **Pasang aplikasi** di halaman login atau menu Akun. Bisa juga lewat menu titik tiga, lalu **Instal aplikasi**.
+- **iPhone/iPad:** buka di **Safari**, tekan tombol Bagikan, lalu **Tambahkan ke Layar Utama**.
+- **Laptop (Chrome/Edge):** tekan ikon pasang di ujung kanan kolom alamat.
+
+Pembaruan aplikasi terpasang otomatis: setiap kali dibuka saat ada sinyal, versi terbaru yang dimuat.
 
 ## Menjalankan di komputer sendiri
 
