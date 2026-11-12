@@ -38,7 +38,7 @@ var state = Object.assign({
   user: null, role: 'anggota', wajibGanti: false, memuat: false, periodeKey: '',
   form: null, confirmLock: false, jenis: '', filter: { q: '', plant: '', korlap: '', kar: '', ang: 'aktif' },
   kasForm: false, umumForm: false, hapusUmum: null, suratForm: false, bidangForm: '', ktaNik: null, korlapBuka: null, korlapCabut: null,
-  pages: {}, pageSize: 5
+  pages: {}, pageSize: (window.innerWidth > 820 && window.innerHeight >= 700) ? 10 : 5
 }, JSON.parse(JSON.stringify(KOSONG)));
 
 var token = '';
@@ -142,7 +142,7 @@ function vDashboard() {
   var pct = state.periode && aktif.length ? Math.round(c.cocok / aktif.length * 100) : 0;
   var judul = !state.periode ? 'Rekap iuran belum diimpor' : c.cocok + ' dari ' + aktif.length + ' anggota aktif terpotong sesuai';
   var ketHero = !state.periode ? 'Impor rekap HR untuk mencocokkan potongan gaji dengan data anggota.' : (state.periode.status === 'terkunci' ? 'Periode sudah dikunci dan totalnya masuk ke kas.' : 'Periode masih draf. Tinjau selisih lalu kunci periodenya.');
-  var hero = '<section class="glass hero wide"><div class="hero-t"><span class="chip">Iuran ' + esc(PERIODE) + '</span><h2>' + judul + '</h2><p>' + ketHero + '</p>' +
+  var hero = '<section class="glass hero"><div class="hero-t"><span class="chip">Iuran ' + esc(PERIODE) + '</span><h2>' + judul + '</h2><p>' + ketHero + '</p>' +
     '<div class="hero-s"><div><b class="num">' + c.tidak_terpotong + '</b><span>tidak terpotong</span></div><div><b class="num">' + c.anomali + '</b><span>anomali</span></div><div><b class="num">' + habis.length + '</b><span>kontrak habis</span></div></div>' +
     '<div class="row"><a class="btn" href="#iuran">Buka Iuran</a><a class="btn ghost" href="#anggota">Kelola anggota</a></div></div>' +
     '<svg class="ring" viewBox="0 0 120 120" role="img" aria-label="' + pct + ' persen anggota aktif terpotong sesuai"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="9"/>' +
@@ -153,23 +153,22 @@ function vDashboard() {
   var minggu = '';
   for (var wi = 0; wi < 7; wi++) { var wd = new Date(senin); wd.setDate(senin.getDate() + wi); minggu += '<div' + (iso(wd) === iso(today) ? ' class="now"' : '') + '><small>' + dn[wd.getDay()] + '</small>' + wd.getDate() + '</div>'; }
   var agenda = habis.slice(0, 2).map(function (a) { return '<div class="agenda"><time>' + parse(a.akhir).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) + '</time><span class="bar"></span><div style="min-width:0"><div class="nm">' + esc(a.nama) + '</div><div class="small muted">Kontrak ' + a.kontrakKe + ' berakhir</div></div></div>'; }).join('') || '<p class="small muted">Tidak ada kontrak yang berakhir dalam 30 hari.</p>';
-  var tglCard = '<section class="glass pad narrow stack"><div class="row" style="flex-wrap:nowrap"><div class="daynum num">' + String(today.getDate()).padStart(2, '0') + '</div><div><div class="nm" style="font-size:18px">' + today.toLocaleDateString('id-ID', { weekday: 'long' }) + '</div><div class="small muted">' + today.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) + ' · ' + habis.length + ' kontrak segera habis</div></div></div><div class="week">' + minggu + '</div>' + agenda + '</section>';
+  var tglCard = '<section class="glass pad stack tglc"><div class="row" style="flex-wrap:nowrap"><div class="daynum num">' + String(today.getDate()).padStart(2, '0') + '</div><div><div class="nm" style="font-size:18px">' + today.toLocaleDateString('id-ID', { weekday: 'long' }) + '</div><div class="small muted">' + today.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) + ' · ' + habis.length + ' kontrak segera habis</div></div></div><div class="week">' + minggu + '</div>' + agenda + '</section>';
   var nSel = state.periode ? c.selisih : 0;
-  return '' +
+  return '<div class="dash">' +
     '<div class="head"><div><h1>' + salam + '</h1><p class="muted">' + today.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '</p></div><div class="row">' + (izin('log') ? '<a class="btn" href="#log">Log aktivitas</a>' : '') + '<a class="btn dark" href="#anggota">Data anggota</a></div></div>' +
-    '<div class="cols eq">' + hero + tglCard + '</div>' + tugasHtml() + '<section class="kpis" aria-label="Ringkasan">' +
+    hero + tglCard + '<section class="kpis" aria-label="Ringkasan">' +
       '<div class="glass kpi"><div class="top">' + I.people + '<span class="tag">' + PLANTS.length + ' plant</span></div><div class="v num">' + aktif.length + '</div><div class="lbl">Anggota aktif</div><div class="small muted">' + (state.anggota.length - aktif.length) + ' nonaktif atau keluar</div></div>' +
       '<div class="glass kpi"><div class="top">' + I.kerja + '<span class="tag">' + pkwt.length + ' PKWT</span></div><div class="v num">' + (aktif.length - pkwt.length) + '</div><div class="lbl">Karyawan PKWTT</div><div class="small muted">' + habis.length + ' kontrak PKWT segera habis</div></div>' +
       '<div class="glass kpi hot"><div class="top">' + I.dompet + '<span class="tag">' + (state.periode ? (state.periode.status === 'terkunci' ? 'Terkunci' : 'Draf') : 'Belum diimpor') + '</span></div><div class="v num">' + (state.periode ? rp(c.total) : 'Rp 0') + '</div><div class="lbl">Iuran ' + esc(PERIODE) + '</div><a href="#iuran" class="small">Buka halaman Iuran</a></div>' +
       '<div class="glass kpi"><div class="top">' + I.awas + '<span class="tag' + (nSel ? ' warn' : '') + '">' + (nSel ? 'Perlu ditinjau' : 'Tidak ada') + '</span></div><div class="v num">' + nSel + '</div><div class="lbl">Selisih iuran</div><a href="#iuran" class="small">Tinjau di halaman Iuran</a></div>' +
     '</section>' +
-    '<div class="cols">' +
-      '<section class="glass wide"><div class="pad"><h2>Kontrak PKWT segera habis</h2><p class="small muted">Dalam 30 hari ke depan atau sudah lewat</p></div>' +
+      '<section class="glass kontrak"><div class="pad"><h2>Kontrak PKWT segera habis</h2><p class="small muted">Dalam 30 hari ke depan atau sudah lewat</p></div>' +
         (habis.length ? '<div class="tablewrap"><table><thead><tr><th>Nama</th><th>Plant</th><th>Korlap</th><th>Kontrak</th><th>Berakhir</th><th>Sisa</th></tr></thead><tbody>' +
           habis.map(function (a) { return '<tr><td><div class="nm">' + esc(a.nama) + '</div><div class="small muted num">' + esc(a.nik) + '</div></td><td>' + esc(a.plant) + '</td><td>' + esc(namaKorlap(a)) + '</td><td>Kontrak ' + a.kontrakKe + '</td><td>' + tgl(a.akhir) + '</td><td>' + sisaPill(sisa(a.akhir)) + '</td></tr>'; }).join('') +
           '</tbody></table></div>' : '<div class="empty">Tidak ada kontrak yang habis dalam 30 hari.</div>') +
       '</section>' +
-      '<div class="narrow" style="display:flex;flex-direction:column;gap:16px">' +
+      '<div class="samping">' + tugasHtml() +
         '<section class="glass pad"><h2>Anggota aktif per plant</h2><ul class="list" style="margin-top:14px">' +
           PLANTS.map(function (p, i) { return '<li><div class="head"><span>' + p + '</span><span class="nm num">' + perPlant[i] + '</span></div><div class="bar" style="margin-top:6px"><i style="width:' + Math.round(perPlant[i] / max * 100) + '%"></i></div></li>'; }).join('') +
         '</ul></section>' +

@@ -309,3 +309,91 @@ td.r, th.r { text-align: right; }
   padding: calc(8px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));
 }
 @media (display-mode: standalone) { body { padding-top: calc(16px + env(safe-area-inset-top, 0px)); } }
+
+/* ---------- Tampilan ringkas desktop: sidebar dan konten setinggi layar, yang panjang menggulir di dalam panel ---------- */
+.dash { display: flex; flex-direction: column; gap: 14px; }
+.samping { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+@media (min-width: 821px) {
+  html, body { height: 100%; }
+  body { overflow: hidden; padding-block: 12px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+  .app { height: 100%; max-width: 1600px; align-items: stretch; gap: 12px; }
+  .side { position: static; height: 100%; min-height: 0; overflow-y: auto; flex-basis: 216px; padding: 12px 10px; gap: 1px; border-radius: 20px; scrollbar-width: thin; }
+  .brandrow { padding: 0 6px 6px; gap: 8px; }
+  img.logo { flex-basis: 40px; width: 40px; height: 40px; }
+  .brand { font-size: 16px; }
+  .brand-sub { font-size: 11px; }
+  .navlabel { padding: 8px 10px 2px; font-size: 10px; }
+  .nav { gap: 1px; }
+  .nav a { min-height: 34px; padding: 0 10px; gap: 10px; font-size: 13.5px; border-radius: 10px; }
+  .ni svg { width: 18px; height: 18px; }
+  .badge { min-width: 20px; height: 20px; font-size: 11px; }
+  .role { padding-top: 10px; gap: 6px; font-size: 13px; }
+  .ava { flex-basis: 32px; height: 32px; font-size: 12px; }
+  .side .btn { min-height: 34px; margin-top: 2px; }
+  .fold { top: 18px; width: 28px; height: 28px; right: -13px; }
+  main { height: 100%; overflow-y: auto; padding: 16px 18px; gap: 12px; border-radius: 22px; scrollbar-width: thin; }
+  .app.auth main { height: auto; max-height: 100%; align-self: center; }
+  main > .head h1, h1 { font-size: 22px; }
+  h2 { font-size: 16px; }
+  .glass { border-radius: 18px; }
+  .pad { padding: 14px; }
+  .btn { min-height: 36px; padding: 0 14px; font-size: 13.5px; }
+  input, select { min-height: 36px; }
+  textarea { min-height: 80px; }
+  .field { gap: 4px; }
+  th { padding: 8px 12px; }
+  td { padding: 8px 12px; }
+  .linkbtn { padding: 6px 4px; }
+  .empty { padding: 16px; }
+  .list { gap: 8px; }
+  .note, .err { padding: 8px 12px; }
+  .kpis { gap: 12px; }
+  .kpi { min-height: 0; padding: 12px 14px; gap: 2px; }
+  .kpi .top { padding-bottom: 6px; }
+  .kpi .v { font-size: 24px; }
+  .ico { width: 34px; height: 34px; }
+  .glass.hero { padding: 16px 20px; gap: 14px; }
+  .hero-t { gap: 8px; }
+  .hero h2 { font-size: 22px; }
+  .hero-s b { font-size: 20px; }
+  .ring { width: 116px; height: 116px; }
+  .daynum { font-size: 40px; }
+  .tglc { gap: 10px; }
+  .week { padding: 6px; }
+  .week div { padding: 3px 0; }
+  .agenda { padding: 7px 10px; }
+  .pager { padding: 8px 12px; }
+  .logobox img { max-width: 200px; }
+}
+/* Dashboard dua kolom yang pas satu layar */
+@media (min-width: 1000px) {
+  .dash { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); grid-template-rows: auto auto auto minmax(0, 1fr); gap: 12px; }
+  .dash > .head, .dash > .kpis { grid-column: 1 / -1; }
+  .dash > .hero, .dash > .kontrak { grid-column: 1; }
+  .dash > .tglc, .dash > .samping { grid-column: 2; }
+  .dash > .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 1000px) and (min-height: 640px) {
+  .dash { height: 100%; }
+  .dash > .kontrak, .dash > .samping { min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+  .samping { gap: 12px; }
+}
+@media (min-width: 821px) {
+  .nav a { min-height: 31px; }
+  .navlabel { padding: 6px 10px 1px; }
+  .brandrow { padding-bottom: 4px; }
+  .role { flex-direction: row; align-items: center; justify-content: space-between; padding-top: 8px; }
+  .role .uwrap { min-width: 0; }
+  .role .uwrap .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .role .btn { flex: 0 0 auto; padding: 0 10px; }
+  .role .btn .nl { display: none; }
+}
+@media (min-width: 821px) and (max-height: 700px) {
+  .nav a { min-height: 28px; font-size: 13px; }
+  .navlabel { padding: 4px 10px 0; }
+}
+@media (min-width: 821px) {
+  .side { overflow: hidden; }
+  .nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; margin: 0 -6px; padding: 2px 6px 6px; }
+  .role { flex: 0 0 auto; }
+}
