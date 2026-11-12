@@ -397,3 +397,11 @@ td.r, th.r { text-align: right; }
   .nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; margin: 0 -6px; padding: 2px 6px 6px; }
   .role { flex: 0 0 auto; }
 }
+/* Tombol lipat menonjol di tepi kanan sidebar: sidebar tidak boleh memotongnya. Daftar menu sudah menggulir sendiri. */
+@media (min-width: 821px) {
+  .side { overflow: visible; }
+  .fold { z-index: 5; }
+  .app.mini .nav { margin: 0 -4px; padding: 2px 4px 6px; }
+  .app.mini .role { flex-direction: column; gap: 8px; }
+  .app.mini .role .btn { width: 100%; }
+}
